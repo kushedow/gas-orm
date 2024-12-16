@@ -4,7 +4,7 @@ Google Apps Scripts Spreadsheet ORM
 
 - Get sheet data as JS objects, with Header as attributes names as simple as `new Sheet('people').all()`
 - Easy get data in {key: value} format: `record.data`
-- Update rows with ORM syntax: `record.update(key, value)
+- Update rows with ORM syntax: `record.update(key, value)`
 - Add new rows from {key: value}: `new Sheet('people').addRow({name: "Alex"})`
 - Filter sheet data: `new Sheet('people').filter("name", "=", "Alex")`
 
