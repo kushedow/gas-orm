@@ -73,10 +73,11 @@ function addRowExample() {
 ```javascript
 function updateRecordExample() {
   const sheet = new Sheet('people', primaryKey='id'); 
-  const record = sheet.get('2'); 
+  const record = sheet.get('2');
+  record.update("name", "Alex")
   Logger.log(record);
 }
-
+```
 
 
 
