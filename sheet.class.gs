@@ -47,22 +47,22 @@ class Sheet {
     this.indexKey = indexKey // unique index field to process updates and deletes better
   }
 
-  get allData(){
+  _allData(){
     const fullRange = this.sheetObject.getDataRange();
-    return = fullRange.getValues().slice(1); // Отезаем заголовок
+    return fullRange.getValues().slice(1); // Отезаем заголовок
   }
 
-  zipRow(rowData, rowNumber) {
+  _zipRow(rowData, rowNumber) {
     let objectData = {};
     for (const [index, name] of Object.entries(this.headers)) { objectData[name] = rowData[index];}
     return new Record(objectData, rowNumber, this.sheetName )
   }
 
   all(){
-    const allData = this.allData
+    const allData = this._allData()
     const result = [];
     for (const [index, rowArray] of Object.entries(allData)) {
-      result.push(this.zipRow(rowArray, +index+2, this.sheetName ));
+      result.push(this._zipRow(rowArray, +index+2, this.sheetName ));
     } 
     return result
   }
@@ -80,15 +80,15 @@ class Sheet {
     const allRows = fullRange.getValues().slice(1);
     const columnIndex = this.headers.indexOf(this.indexKey)
     for (const [rowNumber, rowData] of Object.entries(allRows)){
-      if (rowData[columnIndex] === value.trim()){ return this.zipRow(rowData, rowNumber+2)}
+      if (rowData[columnIndex] === value.trim()){ return this._zipRow(rowData, rowNumber+2)}
     }
   }
 
-  addRow(data) {
+  push(data) {
     const newRow = new Array(this.sheetObject.getLastColumn()).fill('');
     for (const [index, key] of Object.entries(this.headers)){newRow[index] = data.hasOwnProperty(key) ? data[key]: ""}
     this.sheetObject.appendRow(newRow);
-    return this.zipRow(newRow, this.sheetObject.getLastRow())
+    return this._zipRow(newRow, this.sheetObject.getLastRow())
   }
 
   updateCellByRow(rowNumber, key, newValue){
