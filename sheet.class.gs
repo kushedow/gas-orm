@@ -1,22 +1,40 @@
 class Record {
 
   constructor(data, rowNumber, sheetName) {
-    this.data = data;  
-    this.rowNumber = rowNumber   
-    this.sheetName = sheetName 
-    for (const key of Object.keys(this.data)){
-        if(["data", "rowNumber", "sheetName"].includes(key)) {throw Error("Unsupported name")}
-        Object.defineProperty(this, key, {  get() { return this.data[key]} });
+    this.data = data;
+    this.rowNumber = rowNumber;
+    this.sheetName = sheetName;
+    for (const key of Object.keys(this.data)) {
+      if (["data", "rowNumber", "sheetName"].includes(key)) {
+        throw Error("Unsupported name");
+      }
+      Object.defineProperty(this, key, {
+        get() {
+          return this.data[key];
+        }
+      });
     }
   }
 
-  get(key){  return this.data[key] }// for backward compatibility
+  get(key) { return this.data[key]; }
 
-  update(key, newValue){
-    if (!this.data.hasOwnProperty(key)){throw Error(`Key ${key} not found in ${this.sheetName}`)}
-    this.data[key] = newValue
-    new Sheet(this.sheetName).updateCellByRow(this.rowNumber, key, newValue)
+  update(key, newValue) {
+    if (!this.data.hasOwnProperty(key)) {
+      throw Error(`Key ${key} not found in ${this.sheetName}`);
+    }
+    this.data[key] = newValue;
+    new Sheet(this.sheetName).updateCellByRow(this.rowNumber, key, newValue);
   }
+
+  updateAll(newData) {
+    for (const key in newData) {
+      if (this.data.hasOwnProperty(key) && this.data[key] !== newData[key]) { // Check for both key existence AND value difference
+        this.data[key] = newData[key];
+        new Sheet(this.sheetName).updateCellByRow(this.rowNumber, key, newData[key]);
+      }
+    }
+  }
+
 }
 
 class RecordSet {
@@ -34,14 +52,22 @@ class RecordSet {
         return this;
     }
 
+  all() {return this.records}
   get result () {return this.records}
+  
 }
 
 class Sheet {
 
-  constructor(sheetName, indexKey=null) {
-    this.sheetName = sheetName
-    this.sheetObject = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  constructor(sheetName=null, indexKey=null) {
+    if (sheetName){
+        this.sheetObject = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    } else {
+        this.sheetObject = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet()
+    } 
+
+    this.sheetName = this.sheetObject.getName()
+    
     if (!this.sheetObject) { throw new Error('Sheet with name "' + this.sheetName + '" not found.');};
     this.headers = this.sheetObject.getRange(1, 1, 2, this.sheetObject.getLastColumn()).getValues()[0];
     this.indexKey = indexKey // unique index field to process updates and deletes better
@@ -49,7 +75,7 @@ class Sheet {
 
   _allData(){
     const fullRange = this.sheetObject.getDataRange();
-    return fullRange.getValues().slice(1); // Отезаем заголовок
+    return fullRange.getValues().slice(1); // Отрезаем заголовок
   }
 
   _zipRow(rowData, rowNumber) {
@@ -80,7 +106,7 @@ class Sheet {
     const allRows = fullRange.getValues().slice(1);
     const columnIndex = this.headers.indexOf(this.indexKey)
     for (const [rowNumber, rowData] of Object.entries(allRows)){
-      if (rowData[columnIndex] === value.trim()){ return this._zipRow(rowData, rowNumber+2)}
+      if (rowData[columnIndex]+"" === value+"".trim()){ return this._zipRow(rowData, rowNumber+2)}
     }
   }
 
@@ -96,5 +122,14 @@ class Sheet {
     if(columnIndex === undefined) { throw Error(`No ${key} in ${this.sheetName} sheet`);  return  }
     const range = this.sheetObject.getRange(rowNumber, parseInt(columnIndex) + 1)
     range.setValue(newValue)
+  }
+
+  getSelected() {
+    const sheet = this.sheetObject;
+    const range = sheet.getActiveRange();
+    const firstRow = range.getRow();
+    return range.getValues().slice(firstRow === 1 ? 1 : 0).map((rowArray, index) => 
+      this._zipRow(rowArray, firstRow + index)
+    );
   }
 }
