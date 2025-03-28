@@ -106,7 +106,7 @@ class Sheet {
     const allRows = fullRange.getValues().slice(1);
     const columnIndex = this.headers.indexOf(this.indexKey)
     for (const [rowNumber, rowData] of Object.entries(allRows)){
-      if (rowData[columnIndex]+"" === value+"".trim()){ return this._zipRow(rowData, rowNumber+2)}
+      if (rowData[columnIndex]+"" === value+"".trim()){ return this._zipRow(rowData, +rowNumber+2)}
     }
   }
 
