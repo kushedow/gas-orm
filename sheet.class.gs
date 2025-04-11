@@ -66,9 +66,9 @@ class Sheet {
         this.sheetObject = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet()
     } 
 
+    if (!this.sheetObject) { throw new Error(`Sheet with name *${sheetName}* not found.`);};  
     this.sheetName = this.sheetObject.getName()
     
-    if (!this.sheetObject) { throw new Error('Sheet with name "' + this.sheetName + '" not found.');};
     this.headers = this.sheetObject.getRange(1, 1, 2, this.sheetObject.getLastColumn()).getValues()[0];
     this.indexKey = indexKey // unique index field to process updates and deletes better
   }
@@ -93,6 +93,18 @@ class Sheet {
     return result
   }
 
+  allIndexed(){
+
+    if (!this.indexKey) {throw new Error("Cant get indexed record, indexKey not set")}
+    const allRecords = {}
+    for (const record of this.all()){
+      allRecords[record[this.indexKey]]  = record 
+    }
+    return allRecords
+  }
+
+
+
   filter(arg1, arg2=null, arg3=null){  
     const conditions = arg2 ? [[arg1, arg2, arg3]] : arg1
     const recordSet = new RecordSet(this.all())
@@ -106,7 +118,7 @@ class Sheet {
     const allRows = fullRange.getValues().slice(1);
     const columnIndex = this.headers.indexOf(this.indexKey)
     for (const [rowNumber, rowData] of Object.entries(allRows)){
-      if (rowData[columnIndex]+"" === value+"".trim()){ return this._zipRow(rowData, +rowNumber+2)}
+      if (rowData[columnIndex]+"" === value+"".trim()){ return this._zipRow(rowData, rowNumber+2)}
     }
   }
 
